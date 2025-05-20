@@ -171,3 +171,22 @@ def test_model_reproducibility(sample_data, preprocessor):
     assert np.array_equal(
         predictions1, predictions2
     ), "モデルの予測結果に再現性がありません"
+
+
+def test_overfitting(train_model):
+    """過学習チェック：Train/Test 精度差"""
+    model, X_test, y_test = train_model
+    df = pd.read_csv(DATA_PATH)
+    X = df.drop("Survived", axis=1)
+    y = df["Survived"].astype(int)
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    train_pred = model.predict(X_train)
+    test_pred = model.predict(X_test)
+    train_acc = accuracy_score(y_train, train_pred)
+    test_acc = accuracy_score(y_test, test_pred)
+    gap = train_acc - test_acc
+    MAX_GAP = 0.2
+
+    print(f"[過学習] Train: {train_acc:.4f}, Test: {test_acc:.4f}, 差: {gap:.4f}")
+    assert gap <= MAX_GAP, f"Train/Test精度差が大きすぎます: 差 = {gap:.2%}"
